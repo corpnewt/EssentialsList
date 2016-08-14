@@ -2,6 +2,13 @@
 
 efiMountPoint=
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+
+# Turn on case-insensitive matching
+shopt -s nocasematch
+# turn on extended globbing
+shopt -s extglob
+
 driveName=""
 driveMount=""
 driveIdent=""
@@ -64,10 +71,46 @@ function setEFI () {
     fi
 }
 
+function customQuit () {
+	clear
+	echo \#\#\# EssentialsList \#\#\#
+	echo by CorpNewt
+	echo 
+	echo Thanks for testing it out, for bugs/comments/complaints
+	echo send me a message on Reddit, or check out my GitHub:
+	echo 
+	echo www.reddit.com/u/corpnewt
+	echo www.github.com/corpnewt
+	echo 
+	echo Have a nice day/night!
+	echo 
+	echo 
+	shopt -u extglob
+	shopt -u nocasematch
+	exit $?
+}
+
+function displayWarning () {
+	clear
+	echo \#\#\# WARNING \#\#\#
+	echo 
+	echo This script is provided with NO WARRANTY whatsoever.
+	echo I am not responsible for ANY problems or issues you
+	echo may encounter, or any damages as a result of running
+	echo this script.
+	echo 
+	echo To ACCEPT this warning and FULL RESPONSIBILITY for
+	echo using this script, press [enter].
+	echo 
+	read -p "To REFUSE, close this script."
+	mainMenu
+}
+
 function mainMenu () {
     tStamp="$( getTimestamp )"
     
     destFolder="$desktopPath/$folderPrefix$tStamp"
+    destFolderName="$folderPrefix$tStamp"
     
     resetVars
     clear
@@ -276,10 +319,40 @@ function mainMenu () {
     # Todo
     # Zip up the resulting file on the desktop
     
+    clear
+    echo \#\#\# EssentialsList - CorpNewt \#\#\#
+    echo
+    echo Successfully populated \""$destFolder"\"!
+    echo
+    echo Would you like to zip this folder up?  \(y/n\):
+    echo This will delete the original folder when done.
+    echo 
+    echo 
+    read toZip
+    
+    if [[ "$toZip" == "" ]]; then 
+        toZip="y"
+    fi 
+    
+    if [[ "$toZip" == "y" ]]; then
+        clear
+        echo \#\#\# EssentialsList - CorpNewt \#\#\#
+        echo
+        echo Zipping \""$destFolder"\"...
+        cd "$desktopPath"
+        zip -r "$destFolderName.zip" "$destFolderName"
+        cd "$DIR"
+        echo
+        echo Removing folder...
+        rm -Rf "$destFolder"
+    fi
+    
+    
     echo
     echo Done.
     echo
-    exit
+    sleep 3
+    customQuit
 
 }
 
@@ -505,78 +578,6 @@ function getEFIIdentifier () {
 	done
 }
 
-function mountEFI () {
-	# This function iterates through the partitions of a disk
-	# and mounts the ones with the "EFI" partition type
-	local __disk=$1
-	local __diskName="$( getDiskName "$__disk" )"
-	local __diskNum="$( getDiskNumber "$__disk" )"
-	clear
-	echo \#\#\# Mounting Partitions on "$__diskName" \#\#\#
-	echo 
-
-	endOfDisk="0"
-	i=1
-
-	echo Searching for EFI partitions on "$__diskName":
-	echo 
-
-	while [[ "$endOfDisk" == "0" ]]; do
-		# Iterate through all partitins of the disk, and mount those that
-		# are EFI
-		local __currentDisk=disk"$__diskNum"s"$i"
-		# Check if it's a valid disk, and if not, exit the loop
-		if [[ "$( isDisk "$__currentDisk" )" != "0" ]]; then
-			echo End of partitions.
-			echo 
-			endOfDisk="true"
-			continue
-		fi
-		echo Checking "$__currentDisk"...
-		local __currentDiskType="$( getPartitionType "$__currentDisk" )"
-
-		echo Current Disk Type: "$__currentDiskType"
-
-		if [[ "$__currentDiskType" == "EFI" ]]; then
-			echo Partition Type is EFI.
-			echo Mounting...
-			diskutil mount "$__currentDisk"
-		fi
-		i="$( expr $i + 1 )"
-		echo 
-	done
-	echo Done.
-	echo 
-	read -p "Press [enter] to return to the main menu..."
-	mainMenu
-}
-
-function getUUID () {
-	local __disk=$1
-	# If variable is empty, set it to "/"
-	if [[ "$__disk" == "" ]]; then
-		__disk="/"
-	fi
-	# Output the "Disk / Partition UUID" of __disk
-	echo "$( diskutil info "$__disk" | grep 'Disk / Partition UUID' | cut -d : -f 2 | sed 's/^ *//g' | sed 's/ *$//g' )"
-}
-
-function diskInfo () {
-	# Echoes some info on the passed disk
-	if [[ "$( isDisk "$1" )" == "0" ]]; then
-		echo Is Disk: YES
-		echo Disk Name: "$( getDiskName "$1" )"
-		echo Mount Point: "$( getDiskMountPoint "$1" )"
-		echo Disk Identifier: "$( getDiskIdentifier "$1" )"
-		echo Disk Numbers: "$( getDiskNumbers "$1" )"
-		echo Disk Number: "$( getDiskNumber "$1" )"
-		echo Partition Number: "$( getPartitionNumber "$1" )"
-	else
-		echo Is Disk: NO
-	fi
-
-}
-
 ###################################################
 ###             End Disk Functions              ###
 ###################################################
@@ -588,4 +589,4 @@ desktopPath="$( expandRelativePath "$desktopPath" )"
 lEPath="$( expandRelativePath "$lEPath" )"
 sLEPath="$( expandRelativePath "$sLEPath" )"
 
-mainMenu
+displayWarning
