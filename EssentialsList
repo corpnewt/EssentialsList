@@ -18,7 +18,7 @@ desktopPath="~/Desktop"
 lEPath="/Library/Extensions"
 sLEPath="/System/Library/Extensions"
 
-folderPrefix="KextList-"
+folderPrefix="EssentialsList-"
 
 getConfig="1"
 
