@@ -9,6 +9,12 @@ shopt -s nocasematch
 # turn on extended globbing
 shopt -s extglob
 
+bootName=""
+bootMount=""
+bootIdent=""
+bootDisk=""
+bootPart=""
+
 driveName=""
 driveMount=""
 driveIdent=""
@@ -34,6 +40,12 @@ getD64UEFI="1"
 
 
 function resetVars () {
+    bootName=""
+    bootMount=""
+    bootIdent=""
+    bootDisk=""
+    bootPart=""
+
     driveName=""
     driveMount=""
     driveIdent=""
@@ -71,6 +83,18 @@ function setEFI () {
     fi
 }
 
+function setBoot () {
+    bootName="$( getDiskName "$1" )"
+	bootMount="$( getDiskMountPoint "$1" )"
+	bootIdent="$( getDiskIdentifier "$1" )"
+	bootDisk="$( getDiskNumber "$1" )"
+    bootPart="$( getPartitionNumber "$1" )"
+    
+    if [[ "$bootName" == "" ]]; then
+        bootName="Untitled"
+    fi
+}
+
 function customQuit () {
 	clear
 	echo \#\#\# EssentialsList \#\#\#
@@ -103,6 +127,7 @@ function displayWarning () {
 	echo using this script, press [enter].
 	echo 
 	read -p "To REFUSE, close this script."
+    setBoot "/"
 	mainMenu
 }
 
@@ -218,6 +243,36 @@ function mainMenu () {
         echo ...Not Found!
     fi
     
+    # Check if we're on the boot drive or not
+    if [[ ! "$bootMount" == "$driveMount" ]]; then
+        # We're not on our boot drive - grab those too
+        echo
+        echo Checking for \""$bootMount$lEPath"\"...
+    
+        # List lEPath if it exists
+        if [[ -d "$bootMount$lEPath" ]]; then
+            #Yay!  It exists - let's list it:
+            echo ...Found! - Listing to \""$destFolder/Boot-LE-Kexts.txt"\"...
+            lEList="$( cd "$bootMount$lEPath"; ls -1 | grep "^[^.]" )"
+            echo "$lEList" > "$destFolder/Boot-LE-Kexts.txt"
+        else
+            echo ...Not Found!
+        fi
+    
+        echo
+        echo Checking for \""$bootMount$sLEPath"\"...
+    
+        # List sLEPath if it exists
+        if [[ -d "$bootMount$sLEPath" ]]; then
+            #Yay!  It exists - let's list it:
+            echo ...Found! - Listing to \""$destFolder/Boot-SLE-Kexts.txt"\"...
+            sLEList="$( cd "$bootMount$sLEPath"; ls -1 | grep "^[^.]" )"
+            echo "$sLEList" > "$destFolder/Boot-SLE-Kexts.txt"
+        else
+            echo ...Not Found!
+        fi
+    fi
+    
     echo
     echo Checking for \""$driveMount/EFI/CLOVER/kexts"\"...
     
@@ -316,7 +371,19 @@ function mainMenu () {
         echo ...Not Found!
     fi
     
-    # Todo
+    # Grab diskutil list info
+    echo
+    echo Grabbing diskutil list...
+    diskInfo="$( diskutil list )"
+    echo ...Copying to \""$destFolder/DiskUtil-Info.txt"\"...
+    echo "$diskInfo" > "$destFolder/DiskUtil-Info.txt"
+    
+    echo
+    echo Grabbing system version...
+    sysVers="$( system_profiler SPSoftwareDataType )"
+    echo ...Copying to \""$destFolder/SysVersion-Info.txt"\"...
+    echo "$sysVers" > "$destFolder/SysVersion-Info.txt"
+
     # Zip up the resulting file on the desktop
     
     clear
