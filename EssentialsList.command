@@ -37,6 +37,11 @@ getConfig="1"
 
 getD64UEFI="1"
 
+getACPI="1"
+
+getLoaded="1"
+
+getNALoaded="1"
 
 
 function resetVars () {
@@ -242,6 +247,24 @@ function mainMenu () {
     else
         echo ...Not Found!
     fi
+
+    # List all loaded kexts
+    if [[ "$getLoaded" == "1" ]]; then
+        # We want em - let's get em
+        echo
+        echo Getting all loaded kexts! - Listing to \""$destFolder/KextStat.txt"\"...
+        kList="$( kextstat )"
+        echo "$kList" > "$destFolder/KextStat.txt"
+    fi
+
+    # List loaded non-Apple kexts
+    if [[ "$getNALoaded" == "1" ]]; then
+        # We want em - let's get em
+        echo
+        echo Getting loaded non-Apple kexts! - Listing to \""$destFolder/KextStat-non-Apple.txt"\"...
+        ksList="$( kextstat | grep -iv com.apple )"
+        echo "$ksList" > "$destFolder/KextStat-non-Apple.txt"
+    fi
     
     # Check if we're on the boot drive or not
     if [[ ! "$bootMount" == "$driveMount" ]]; then
@@ -290,23 +313,37 @@ function mainMenu () {
         fi
         
         if [[ "$getConfig" == "1" ]]; then
-            echo ...Checking for \""$driveMount/EFI/CLOVER/config.plist"\"...
+            echo
+            echo Checking for \""$driveMount/EFI/CLOVER/config.plist"\"...
             if [[ -e "$driveMount/EFI/CLOVER/config.plist" ]]; then
-                echo ......Found! - Copying to \""$destFolder/EFIF-config.plist"\"...
+                echo ...Found! - Copying to \""$destFolder/EFIF-config.plist"\"...
                 cp "$driveMount/EFI/CLOVER/config.plist" "$destFolder/EFIF-config.plist"
             else
-                echo ......Not Found!
+                echo ...Not Found!
             fi
         fi
         
         if [[ "$getD64UEFI" == "1" ]]; then
-            echo ...Checking for \""$driveMount/EFI/drivers64UEFI"\"...
+            echo
+            echo Checking for \""$driveMount/EFI/drivers64UEFI"\"...
                 if [[ -d "$driveMount/EFI/CLOVER/drivers64UEFI" ]]; then
-                    echo ......Found! - Listing to \""$destFolder/EFIF-drivers64UEFI.txt"\"...
+                    echo ...Found! - Listing to \""$destFolder/EFIF-drivers64UEFI.txt"\"...
                     d64UEFIFList="$( cd "$driveMount/EFI/CLOVER/drivers64UEFI"; ls -1 | grep "^[^.]" )"
                     echo "$d64UEFIFList" > "$destFolder/EFIF-drivers64UEFI.txt"
             else
-                echo ......Not Found!
+                echo ...Not Found!
+            fi
+        fi
+
+        if [[ "$getACPI" == "1" ]]; then
+            echo
+            echo ...Checking for \""$driveMount/EFI/ACPI/patched"\"...
+                if [[ -d "$driveMount/EFI/CLOVER/ACPI/patched" ]]; then
+                    echo ...Found! - Listing to \""$destFolder/EFIF-ACPI-Patched.txt"\"...
+                    acpiList="$( cd "$driveMount/EFI/CLOVER/ACPI/Patched"; ls -1 | grep "^[^.]" )"
+                    echo "$acpiList" > "$destFolder/EFIF-ACPI-Patched.txt"
+            else
+                echo ...Not Found!
             fi
         fi
         
@@ -335,35 +372,51 @@ function mainMenu () {
         fi
         efiMount="$( removeTrailingSlash "$efiMount" )"
         # Iterate
-        echo ...Checking for \""$efiMount/EFI/CLOVER/kexts"\"...
+        echo
+        echo Checking for \""$efiMount/EFI/CLOVER/kexts"\"...
         if [[ -d "$efiMount/EFI/CLOVER/kexts" ]]; then
             echo ...Found! - Iterating contents...
             iterateEFI "$efiMount/EFI/CLOVER/kexts" "$destFolder" "EFI-"
         fi
         
         if [[ "$getConfig" == "1" ]]; then
-            echo ...Checking for \""$efiMount/EFI/CLOVER/config.plist"\"...
+            echo
+            echo Checking for \""$efiMount/EFI/CLOVER/config.plist"\"...
             if [[ -e "$efiMount/EFI/CLOVER/config.plist" ]]; then
-                echo ......Found! - Copying to \""$destFolder/EFI-config.plist"\"...
+                echo ...Found! - Copying to \""$destFolder/EFI-config.plist"\"...
                 cp "$efiMount/EFI/CLOVER/config.plist" "$destFolder/EFI-config.plist"
             else
-                echo ......Not Found!
+                echo ...Not Found!
             fi
         fi
         
         if [[ "$getD64UEFI" == "1" ]]; then
+            echo
             echo ...Checking for \""$efiMount/EFI/drivers64UEFI"\"...
                 if [[ -d "$efiMount/EFI/CLOVER/drivers64UEFI" ]]; then
-                    echo ......Found! - Listing to \""$destFolder/EFI-drivers64UEFI.txt"\"...
+                    echo ...Found! - Listing to \""$destFolder/EFI-drivers64UEFI.txt"\"...
                     d64UEFIList="$( cd "$efiMount/EFI/CLOVER/drivers64UEFI"; ls -1 | grep "^[^.]" )"
                     echo "$d64UEFIList" > "$destFolder/EFI-drivers64UEFI.txt"
             else
-                echo ......Not Found!
+                echo ...Not Found!
             fi
         fi
         
+        if [[ "$getACPI" == "1" ]]; then
+            echo
+            echo ...Checking for \""$efiMount/EFI/ACPI/patched"\"...
+                if [[ -d "$efiMount/EFI/CLOVER/ACPI/patched" ]]; then
+                    echo ...Found! - Listing to \""$destFolder/EFI-ACPI-Patched.txt"\"...
+                    acpiList="$( cd "$efiMount/EFI/CLOVER/ACPI/Patched"; ls -1 | grep "^[^.]" )"
+                    echo "$acpiList" > "$destFolder/EFI-ACPI-Patched.txt"
+            else
+                echo ...Not Found!
+            fi
+        fi
+
         # Unmount EFI if it was unmounted before
         if [[ "$needToUnmount" == "1" ]]; then
+            echo
             echo Unmounting \""$efiMount"\"...
             diskutil unmount "$efiIdent"
         fi
