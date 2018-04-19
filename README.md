@@ -1,5 +1,5 @@
 # EssentialsList
-A small python script that creates a timestamped zip on your Desktop that containing troubleshooting info
+A small python script that creates a timestamped zip on your Desktop containing troubleshooting info.
 
 ***
 
