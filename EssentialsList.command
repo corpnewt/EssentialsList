@@ -30,6 +30,7 @@ class Essentials:
         
         # Turn on the functions we want to run
         self.efi        = kwargs.get("efi", True)
+        self.h_serial   = kwargs.get("hide_serial", True)
         self.overview   = kwargs.get("overview", True)
         self.auto_efi   = kwargs.get("auto_efi", True)
         self.disks      = kwargs.get("diskutil", True)
@@ -51,6 +52,10 @@ class Essentials:
         # Get the tools we need
         self.bdmesg     = self.get_binary("bdmesg")
         self.patchmatic = self.get_binary("patchmatic")
+
+        # Set placeholders for serial and uuid
+        self.serial     = ""
+        self.smuuid     = ""
         return
         
     def get_binary(self, name):
@@ -68,6 +73,16 @@ class Essentials:
             return os.path.join(os.path.dirname(os.path.realpath(__file__)), self.script_folder, name)
         # Not found
         return None
+
+    def get_serial(self):
+        # Will retrieve the serial and UUID from IOReg and return it
+        # for obfuscation purposes
+        if "" in [ self.serial, self.smuuid ]:
+            # We don't have them - get them
+            print("Locating serial for obfuscation...")
+            hw = self.r.run({"args":["system_profiler", "SPHardwareDataType"]})[0].strip()
+            self.serial = self.get_split(hw, 'Serial Number (system): ', '\n', "")
+            self.smuuid = self.get_split(hw, 'Hardware UUID: ', '\n', "")
 
     def get_uuid_from_bdmesg(self):
         if not self.bdmesg:
@@ -240,6 +255,10 @@ class Essentials:
         print(" ")
 
         try:
+            # Gather serial info if needed
+            if self.h_serial:
+                self.get_serial()
+                self.h_serial = False if "" in [ self.serial, self.smuuid ] else True
             # Run all the processes needed, and gather the info
             over_text = ""
             if self.efi:
@@ -327,6 +346,9 @@ class Essentials:
 
         hw_name = self.r.run({"args":["system_profiler", "SPHardwareDataType"]})[0].strip()
         hw_name = "\n".join([ x.strip() for x in hw_name.split("\n")[4:] ])
+        if self.h_serial:
+            hw_name = hw_name.replace(self.serial, "0"*len(self.serial))
+            hw_name = hw_name.replace(self.smuuid, "-".join([ "0"*len(x) for x in self.smuuid.split("-") ]))
         over += hw_name + "\n\n"
 
         # Get more info
@@ -381,11 +403,31 @@ class Essentials:
             # Copy the config.plist over
             if os.path.exists(os.path.join(p, "config.plist")) and not os.path.isdir(os.path.join(p, "config.plist")):
                 shutil.copy(os.path.join(p, "config.plist"), os.path.join(p_folder, "config.plist"))
+                board_serial = None
                 try:
-                    plistlib.readPlist(os.path.join(p, "config.plist"))
+                    plist_dict = plistlib.readPlist(os.path.join(p_folder, "config.plist"))
                     conf = "OK!"
                 except Exception as e:
                     conf = "Broken!: {}".format(e)
+                if self.h_serial:
+                    # Rework plist data independently of formatting issues
+                    plist_data = ""
+                    with open(os.path.join(p_folder, "config.plist"), "r") as f:
+                        s = False
+                        for line in f:
+                            if s == False and any(x for x in ["<key>serialnumber</key>", "<key>boardserialnumber</key>", "<key>mlb</key>", "<key>rom</key>", "<key>smuuid</key>", "<key>customuuid</key>"] if x in line.lower()):
+                                plist_data += line
+                                s = True
+                                continue
+                            if s:
+                                s = False
+                                hidden = self.get_split(line, "<string>", "</string>", None)
+                                if hidden:
+                                    line = line.replace(hidden, "-".join([ "0"*len(x) for x in hidden.split("-") ]))
+                            plist_data += line
+                    if len(plist_data):
+                        with open(os.path.join(p_folder, "config.plist"), "w") as f:
+                            f.write(plist_data)
 
             # Copy the debug.log over
             got_debug = False
@@ -431,7 +473,7 @@ class Essentials:
                         # old, skip
                         continue
                     acpi += "  {}\n".format(item)
-                    files.append(item)
+                    acpi_files.append(item)
                     # Make sure we have a target destination
                     if not os.path.exists(d):
                         os.mkdir(d)
@@ -615,6 +657,9 @@ class Essentials:
         # Pipes the output of ioreg to a ioreg.txt file in the temp folder
         ioreg = self.r.run({"args" : ["ioreg", "-f", "l"]})[0]
         if len(ioreg):
+            if self.h_serial:
+                ioreg = ioreg.replace(self.serial, "0"*len(self.serial))
+                ioreg = ioreg.replace(self.smuuid, "-".join([ "0"*len(x) for x in self.smuuid.split("-") ]))
             with open(os.path.join(temp, "ioreg.txt"), "w") as f:
                 f.write(ioreg)
 
