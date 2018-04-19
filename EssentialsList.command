@@ -144,6 +144,29 @@ class Essentials:
         return self.d.get_efi(iden)
 
     def main(self):
+        # Check for forced logs/files and get confirmation:
+        if True in [ self.force_ssdt, self.force_dbg, self.force_pre ]:
+            # We have at least one forced log - let's throw up the prompt
+            while True:
+                self.u.head("Required Files")
+                print(" ")
+                print("The following are required for this script to complete")
+                print("and must be under an hour old:\n")
+                if self.force_ssdt:
+                    print("* ACPI -> origin SSDT/DSDT (press F4 in Clover to dump)")
+                if self.force_dbg:
+                    print("* boot.log (config.plist -> Boot -> Debug = True)")
+                if self.force_pre:
+                    print("* preboot.log (press F2 in Clover to dump)")
+                print(" ")
+                menu = self.u.grab("Continue? (y/n):  ")
+                if not len(menu):
+                    continue
+                if menu.lower()[:1] == "y":
+                    break
+                elif menu.lower()[:1] == "n":
+                    self.u.custom_quit()
+        
         boot_drive   = self.d.get_identifier("/")
         clover_drive = None
         if self.auto_efi:
