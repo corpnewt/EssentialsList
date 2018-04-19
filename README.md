@@ -11,7 +11,7 @@ Do the following one line at a time in Terminal:
     cd EssentialsList
     chmod +x EssentialsList.command
     
-Then run with either `./Run.command` or by double-clicking *Run.command*
+Then run with either `./EssentialsList.command` or by double-clicking *EssentialsList.command*
 
 ***
 
