@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from Scripts import *
-import os, tempfile, datetime, shutil, time, plistlib
+import os, tempfile, datetime, shutil, time, plistlib, json
 
 class Essentials:
     def __init__(self, **kwargs):
@@ -11,7 +11,21 @@ class Essentials:
         self.c = rebuildcache.Rebuild()
         
         self.script_folder = "Scripts"
-
+        self.settings      = "settings.json"
+        # Check for self.settings in our self.script_folder
+        # And load it into kwargs if it exists - this will override
+        # default settings
+        settings_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            self.script_folder,
+            self.settings
+        )
+        if os.path.exists(settings_path):
+            try:
+                kwargs = json.load(open(settings_path))
+            except:
+                pass
+            
         self.width = 70
         
         # Turn on the functions we want to run
