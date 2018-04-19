@@ -711,17 +711,6 @@ class Essentials:
         print("Found Clover version {}".format(version).center(70))
         print("{}\n\n".format("#"*70))
 
-
-    def rebuild(self, stream = True):
-        # Get os version
-        os_vers = self.r.run({"args":["sw_vers", "-productVersion"]})[0]
-        if self._compare_versions(os_vers, "10.11.0") == True:
-            # We're on an OS version prior to 10.11
-            self.r.run({"args":"sudo touch /System/Library/Extensions && sudo kextcache -u /", "stream" : stream, "shell" : True})
-        else:
-            # 10.11 or above
-            self.r.run({"args":"sudo kextcache -i / && sudo kextcache -u /", "stream" : stream, "shell" : True})
-
 if __name__ == '__main__':
     e = Essentials()
     e.main()
