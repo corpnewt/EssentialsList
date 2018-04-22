@@ -80,25 +80,6 @@ class Disk:
             return None
         return self.get_disk_info(disk_id).get("FilesystemName", None)
 
-    def get_disk_partition_table(self, disk):
-        disk_id = self.get_identifier(disk)
-        if not disk_id:
-            return None
-        disk_id = self.get_parent(disk_id, True)
-        return self.get_disk_info(disk_id).get("Content", None)
-
-    def get_disk_uuid(self, disk):
-        disk_id = self.get_identifier(disk)
-        if not disk_id:
-            return None
-        return self.get_disk_info(disk_id).get("DiskUUID", None)
-
-    def get_volume_uuid(self, disk):
-        disk_id = self.get_identifier(disk)
-        if not disk_id:
-            return None
-        return self.get_disk_info(disk_id).get("VolumeUUID", None)
-
     def get_apfs(self):
         # Returns a dictionary object of apfs disks
         output = self.r.run({"args":"echo y | " + self.diskutil + " apfs list -plist", "shell" : True})
@@ -304,72 +285,43 @@ class Disk:
         # Returns a list object with all volumes from disks
         return self.disks.get("VolumesFromDisks", [])
 
-    def get_volume_name(self, disk):
-        # Returns the volume name of the passed ident if one exists
+    def _get_value_apfs(self, disk, field, default = None):
+        return self._get_value(disk, field, default, True)
+
+    def _get_value(self, disk, field, default = None, apfs_only = False):
         disk_id = self.get_identifier(disk)
         if not disk_id:
             return None
+        # Takes a disk identifier, and returns the requested value
         for d in self.disks.get("AllDisksAndPartitions", []):
-            if d.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                # Whole disk - no mounts
-                return d.get("VolumeName", None)
             for a in d.get("APFSVolumes", []):
                 if a.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return a.get("VolumeName", None)
-            for p in d.get("Partitions", []):
-                if p.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return p.get("VolumeName", None)
+                    return a.get(field, default)
+            if apfs_only:
+                # Skip looking at regular partitions
+                continue
+            if d.get("DeviceIdentifier", "").lower() == disk_id.lower():
+                return d.get(field, default)
+            for a in d.get("Partitions", []):
+                if a.get("DeviceIdentifier", "").lower() == disk_id.lower():
+                    return a.get(field, default)
         return None
+
+    # Getter methods
+    def get_content(self, disk):
+        return self._get_value(disk, "Content")
+
+    def get_volume_name(self, disk):
+        return self._get_value(disk, "VolumeName")
 
     def get_volume_uuid(self, disk):
-        # Returns the volume uuid of the passed ident if one exists
-        disk_id = self.get_identifier(disk)
-        if not disk_id:
-            return None
-        for d in self.disks.get("AllDisksAndPartitions", []):
-            if d.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                # Whole disk - no mounts
-                return d.get("VolumeUUID", None)
-            for a in d.get("APFSVolumes", []):
-                if a.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return a.get("VolumeUUID", None)
-            for p in d.get("Partitions", []):
-                if p.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return p.get("VolumeUUID", None)
-        return None
+        return self._get_value(disk, "VolumeUUID")
 
     def get_disk_uuid(self, disk):
-        # Returns the disk uuid of the passed ident if one exists
-        disk_id = self.get_identifier(disk)
-        if not disk_id:
-            return None
-        for d in self.disks.get("AllDisksAndPartitions", []):
-            if d.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                # Whole disk - no mounts
-                return d.get("DiskUUID", None)
-            for a in d.get("APFSVolumes", []):
-                if a.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return a.get("DiskUUID", None)
-            for p in d.get("Partitions", []):
-                if p.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return p.get("DiskUUID", None)
-        return None
+        return self._get_value(disk, "DiskUUID")
 
     def get_mount_point(self, disk):
-        disk_id = self.get_identifier(disk)
-        if not disk_id:
-            return None
-        for d in self.disks.get("AllDisksAndPartitions", []):
-            if d.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                # Whole disk - no mounts
-                return d.get("MountPoint", None)
-            for a in d.get("APFSVolumes", []):
-                if a.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return a.get("MountPoint", None)
-            for p in d.get("Partitions", []):
-                if p.get("DeviceIdentifier", "").lower() == disk_id.lower():
-                    return p.get("MountPoint", None)
-        return None
+        return self._get_value(disk, "MountPoint")
 
     def open_mount_point(self, disk, new_window = False):
         disk_id = self.get_identifier(disk)
@@ -400,7 +352,9 @@ class Disk:
             vol_list.append({
                 "name" : self.get_volume_name(i),
                 "identifier" : i,
-                "mount_point" : self.get_mount_point(i)
+                "mount_point" : self.get_mount_point(i),
+                "disk_uuid" : self.get_disk_uuid(i),
+                "volume_uuid" : self.get_volume_uuid(i)
             })
         return vol_list
 
