@@ -1,4 +1,6 @@
-import subprocess, plistlib, sys, os, time, json, run
+import subprocess, plistlib, sys, os, time, json
+sys.path.append(os.path.abspath(os.path.dirname(os.path.realpath(__file__))))
+import run
 
 class Disk:
 
