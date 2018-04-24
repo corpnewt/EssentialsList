@@ -122,7 +122,7 @@ class Utils:
             i, o, e = select.select( [sys.stdin], [], [], timeout )
             if i:
                 i = sys.stdin.readline().strip()
-        print ''  # needed to move to next line
+        print('')  # needed to move to next line
         if len(i) > 0:
             return i
         else:
