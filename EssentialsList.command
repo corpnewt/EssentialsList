@@ -371,8 +371,8 @@ class Essentials:
             over += "\n\n".join(over_text)
 
         # Write to file
-        with open(os.path.join(temp, "- Overview -.txt"), "w") as f:
-            f.write(over)
+        with open(os.path.join(temp, "- Overview -.txt"), "wb") as f:
+            f.write(over.encode("utf-8"))
         
     def process_efi(self, path_list, folder):
         # Iterate through the paths and grab all the Clover-type info
@@ -426,8 +426,8 @@ class Essentials:
                                     line = line.replace(hidden, "-".join([ "0"*len(x) for x in hidden.split("-") ]))
                             plist_data += line
                     if len(plist_data):
-                        with open(os.path.join(p_folder, "config.plist"), "w") as f:
-                            f.write(plist_data)
+                        with open(os.path.join(p_folder, "config.plist"), "wb") as f:
+                            f.write(plist_data.encode("utf-8"))
 
             # Copy the debug.log over
             got_debug = False
@@ -521,8 +521,8 @@ class Essentials:
                 if len(kext):
                     kext = kext[:-1]
                     # We actually wrote some stuff
-                    with open(os.path.join(p_folder, "Kexts.txt"), "w") as f:
-                        f.write(kext)
+                    with open(os.path.join(p_folder, "Kexts.txt"), "wb") as f:
+                        f.write(kext.encode("utf-8"))
             # Check in the drivers32/64(UEFI) folders
             d_folders = [ x for x in os.listdir(p) if x.lower() in ["drivers32", "drivers64", "drivers32uefi", "drivers64uefi"] and os.path.isdir(os.path.join(p, x)) ]
             if len(d_folders):
@@ -536,8 +536,8 @@ class Essentials:
                         uefi += "  {}\n".format(d_p)
                 if len(uefi):
                     uefi = uefi[:-1]
-                    with open(os.path.join(p_folder, "EFI Drivers.txt"), "w") as f:
-                        f.write(uefi)
+                    with open(os.path.join(p_folder, "EFI Drivers.txt"), "wb") as f:
+                        f.write(uefi.encode("utf-8"))
 
             over = "{}\n".format("#"*self.width)
             over += "#{}#\n".format("{} - {} - {}".format(disk, name, p).center((self.width-2)))
@@ -567,8 +567,8 @@ class Essentials:
             over += "{}\n\n".format("#"*self.width)
             over += "{}".format(uefi)
 
-            with open(os.path.join(p_folder, "- Overview -.txt"), "w") as f:
-                f.write(over)
+            with open(os.path.join(p_folder, "- Overview -.txt"), "wb") as f:
+                f.write(over.encode("utf-8"))
             over_view.append(over)
         return over_view
 
@@ -577,13 +577,13 @@ class Essentials:
         print("Getting sysctl cpu info...")
         cpu = self.r.run({"args" : ["sysctl", "machdep.cpu"]})[0]
         if len(cpu):
-            with open(os.path.join(temp, "sysctl_cpu.txt"), "w") as f:
-                f.write(cpu)
+            with open(os.path.join(temp, "sysctl_cpu.txt"), "wb") as f:
+                f.write(cpu.encode("utf-8"))
         print("Getting sysctl xcpm info...")
         xcmp = self.r.run({"args" : ["sysctl", "machdep.xcpm"]})[0]
         if len(xcmp):
-            with open(os.path.join(temp, "sysctl_xcmp.txt"), "w") as f:
-                f.write(xcmp)
+            with open(os.path.join(temp, "sysctl_xcmp.txt"), "wb") as f:
+                f.write(xcmp.encode("utf-8"))
                 
     def process_patchmatic(self, temp):
         # Dumps ACPI patches via patchmatic
@@ -612,8 +612,8 @@ class Essentials:
         if len(pmsrt):
             pm_text += "### pmset -g assertions ###\n\n" + pmsrt
         if len(pm_text):
-            with open(os.path.join(temp, "pmset.txt"), "w") as f:
-                f.write(pm_text)
+            with open(os.path.join(temp, "pmset.txt"), "wb") as f:
+                f.write(pm_text.encode("utf-8"))
 
     def process_mount_points(self, temp):
         # Builds a list of mounted vols
@@ -622,24 +622,24 @@ class Essentials:
         mounts = self.d.get_mounted_volume_dicts()
         mount_string = "\n".join(sorted([ "{} - {} - {}".format(x["identifier"], x["name"], x["mount_point"]) for x in mounts ]))
         if len(mount_string):
-            with open(os.path.join(temp, "mount_points.txt"), "w") as f:
-                f.write(mount_string)
+            with open(os.path.join(temp, "mount_points.txt"), "wb") as f:
+                f.write(mount_string.encode("utf-8"))
                 
     def process_disks(self, temp):
         # Pipes the output of diskutil list to a diskutil.txt file in the temp folder
         print("Getting diskutil list...")
         disk = self.r.run({"args" : ["diskutil", "list"]})[0]
         if len(disk):
-            with open(os.path.join(temp, "diskutil.txt"), "w") as f:
-                f.write(disk)
+            with open(os.path.join(temp, "diskutil.txt"), "wb") as f:
+                f.write(disk.encode("utf-8"))
 
     def process_nvram(self, temp):
         # Pipes the output of nvram to a nvram.plist file in the temp folder
         print("Getting nvram...")
         nvram = self.r.run({"args" : ["nvram", "-x", "-p"]})[0]
         if len(nvram):
-            with open(os.path.join(temp, "nvram.plist"), "w") as f:
-                f.write(nvram)
+            with open(os.path.join(temp, "nvram.plist"), "wb") as f:
+                f.write(nvram.encode("utf-8"))
 
     def process_bdmesg(self, temp):
         # Pipes the output of bdmesg to a bdmesg.txt file in the temp folder
@@ -649,8 +649,8 @@ class Essentials:
             return
         bdmesg = self.r.run({"args" : [self.bdmesg]})[0]
         if len(bdmesg):
-            with open(os.path.join(temp, "bdmesg.txt"), "w") as f:
-                f.write(bdmesg)
+            with open(os.path.join(temp, "bdmesg.txt"), "wb") as f:
+                f.write(bdmesg.encode("utf-8"))
 
     def process_ioreg(self, temp):
         print("Getting ioreg...")
@@ -660,8 +660,8 @@ class Essentials:
             if self.h_serial:
                 ioreg = ioreg.replace(self.serial, "0"*len(self.serial))
                 ioreg = ioreg.replace(self.smuuid, "-".join([ "0"*len(x) for x in self.smuuid.split("-") ]))
-            with open(os.path.join(temp, "ioreg.txt"), "w") as f:
-                f.write(ioreg)
+            with open(os.path.join(temp, "ioreg.txt"), "wb") as f:
+                f.write(ioreg.encode("utf-8"))
 
     def process_cache(self, temp):
         print("Rebuilding the kextcache (may take some time)...")
@@ -669,8 +669,8 @@ class Essentials:
         cache = self.c.rebuild(False)
         if len(cache[1]):
             # Let's dump the raw kextcache here
-            with open(os.path.join(temp, "kextcache_raw.txt"), "w") as f:
-                f.write(cache[1])
+            with open(os.path.join(temp, "kextcache_raw.txt"), "wb") as f:
+                f.write(cache[1].encode("utf-8"))
             # Touch it up a bit
             new_cache = []
             for line in cache[1].split("\n"):
@@ -689,16 +689,16 @@ class Essentials:
                 if len(k) and not k in new_cache:
                     new_cache.append("{}{}".format(loc, kext))
             if len(new_cache):
-                with open(os.path.join(temp, "kextcache.txt"), "w") as f:
-                    f.write("\n".join(new_cache))
+                with open(os.path.join(temp, "kextcache.txt"), "wb") as f:
+                    f.write("\n".join(new_cache).encode("utf-8"))
 
     def process_kextstat(self, temp):
         print("Getting kextstat...")
         # Dumps the kextstat output
         kextstat = self.r.run({"args" : ["kextstat"]})[0]
         if len(kextstat):
-            with open(os.path.join(temp, "kextstat.txt"), "w") as f:
-                f.write(kextstat)
+            with open(os.path.join(temp, "kextstat.txt"), "wb") as f:
+                f.write(kextstat.encode("utf-8"))
 
     def process_kext_folders(self, temp):
         if os.path.exists("/Library/Extensions/"):
@@ -713,8 +713,8 @@ class Essentials:
                     k_ver = self.get_kext_version(os.path.join("/Library/Extensions/", k))
                     le += "{} v{}\n".format(k, k_ver)
             if len(le):
-                with open(os.path.join(temp, "kexts-le.txt"), "w") as f:
-                    f.write(le)
+                with open(os.path.join(temp, "kexts-le.txt"), "wb") as f:
+                    f.write(le.encode("utf-8"))
         if os.path.exists("/System/Library/Extensions/"):
             sle = ""
             print("Getting kexts from /System/Library/Extensions...")
@@ -727,8 +727,8 @@ class Essentials:
                     k_ver = self.get_kext_version(os.path.join("/System/Library/Extensions/", k))
                     sle += "{} v{}\n".format(k, k_ver)
             if len(sle):
-                with open(os.path.join(temp, "kexts-sle.txt"), "w") as f:
-                    f.write(sle)
+                with open(os.path.join(temp, "kexts-sle.txt"), "wb") as f:
+                    f.write(sle.encode("utf-8"))
 
     def get_kext_version(self, path):
         if path.lower().endswith(".plist"):
