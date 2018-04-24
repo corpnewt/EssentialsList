@@ -1,4 +1,4 @@
-import sys, os, time, re, json
+import sys, os, time, re, json, datetime
 
 if os.name == "nt":
     # Windows
@@ -198,5 +198,14 @@ class Utils:
         print("send me a message on Reddit, or check out my GitHub:\n")
         print("www.reddit.com/u/corpnewt")
         print("www.github.com/corpnewt\n")
-        print("Have a nice day/night!\n\n")
+        # Get the time and wish them a good morning, afternoon, evening, and night
+        hr = datetime.datetime.now().time().hour
+        if hr > 3 and hr < 12:
+            print("Have a nice morning!\n\n")
+        elif hr >= 12 and hr < 17:
+            print("Have a nice afternoon!\n\n")
+        elif hr >= 17 and hr < 21:
+            print("Have a nice evening!\n\n")
+        else:
+            print("Have a nice night!\n\n")
         exit(0)
