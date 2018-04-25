@@ -42,7 +42,7 @@ It also auto-finds the booted Clover install by parsing bdmesg - but will prompt
 
 It can auto-mount EFI partitions, and will remember the state and return it when completed.
 
-It saves the output to a timestamped zip on the Desktop with the format `EssentialsList-[timestam].zip`
+It saves the output to a timestamped zip on the Desktop with the format `EssentialsList-[timestamp].zip`
 
 ***
 
