@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from Scripts import *
 import os, tempfile, datetime, shutil, time, plistlib, json
 
