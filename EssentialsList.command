@@ -50,7 +50,6 @@ class Essentials:
         self.force_pre  = kwargs.get("force_preboot", False)
         
         # Get the tools we need
-        self.bdmesg     = self.get_binary("bdmesg")
         self.patchmatic = self.get_binary("patchmatic")
 
         # Set placeholders for serial and uuid
@@ -85,16 +84,14 @@ class Essentials:
             self.smuuid = self.get_split(hw, 'Hardware UUID: ', '\n', "")
 
     def get_uuid_from_bdmesg(self):
-        if not self.bdmesg:
-            return None
         # Get bdmesg output - then parse for SelfDevicePath
-        bdmesg = self.r.run({"args":[self.bdmesg]})[0]
-        if not "SelfDevicePath=" in bdmesg:
+        bd = bdmesg.bdmesg()
+        if not "SelfDevicePath=" in bd:
             # Not found
             return None
         try:
             # Split to just the contents of that line
-            line = bdmesg.split("SelfDevicePath=")[1].split("\n")[0]
+            line = bd.split("SelfDevicePath=")[1].split("\n")[0]
             # Get the HD section
             hd   = line.split("HD(")[1].split(")")[0]
             # Get the UUID
@@ -111,19 +108,33 @@ class Essentials:
         except:
             return default
 
+    def get_all_split(self, text, start, end, default=None):
+        splits = []
+        try:
+            for x in text.split(start)[1:]:
+                try:
+                    splits.append(x.split(end)[0])
+                except:
+                    pass
+        except:
+            pass
+        if not len(splits):
+            return default
+        return splits
+
     def get_hw_from_bdmesg(self):
-        if not self.bdmesg:
-            return None
         # Get bdmesg output - then parse for hardware info
         # Should include:
         # Running on: 'x' with board 'y'
         # BrandString = CPU_String
         # - GFX: Model=
-        bdmesg = self.r.run({"args":[self.bdmesg]})[0]
-        mobo = self.get_split(bdmesg, "Running on: ", "\n", "Unknown Board")
-        cpu  = self.get_split(bdmesg, "BrandString = ", "\n", "Unknown CPU")
-        gpu  = self.get_split(bdmesg, "- GFX: Model=", "\n", "Unknown GPU")
-        return "CPU:  {}\nGPU:  {}\nMOBO: {}".format(cpu, gpu, mobo)
+        bd    = bdmesg.bdmesg()
+        mobo  = self.get_split(bd, "Running on: ", "\n", "Unknown Board")
+        cpu   = self.get_split(bd, "BrandString = ", "\n", "Unknown CPU")
+        gpus  = self.get_all_split(bd, "- GFX: Model=", "\n", "Unknown GPU")
+        if type(gpus) is list:
+            gpus = "      ".join(gpus)
+        return "CPU:  {}\nGPU:  {}\nMOBO: {}".format(cpu, gpus, mobo)
         
     def get_efi(self):
         self.u.head()
@@ -644,13 +655,10 @@ class Essentials:
     def process_bdmesg(self, temp):
         # Pipes the output of bdmesg to a bdmesg.txt file in the temp folder
         print("Getting bdmesg...")
-        if not self.bdmesg:
-            print("Could not locate bdmesg!  Skipping...")
-            return
-        bdmesg = self.r.run({"args" : [self.bdmesg]})[0]
-        if len(bdmesg):
+        bd = bdmesg.bdmesg()
+        if len(bd):
             with open(os.path.join(temp, "bdmesg.txt"), "wb") as f:
-                f.write(bdmesg.encode("utf-8"))
+                f.write(bd.encode("utf-8"))
 
     def process_ioreg(self, temp):
         print("Getting ioreg...")
