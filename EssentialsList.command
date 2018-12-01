@@ -662,14 +662,17 @@ class Essentials:
 
     def process_ioreg(self, temp):
         print("Getting ioreg...")
-        # Pipes the output of ioreg to a ioreg.txt file in the temp folder
-        ioreg = self.r.run({"args" : ["ioreg", "-f", "l"]})[0]
-        if len(ioreg):
-            if self.h_serial:
-                ioreg = ioreg.replace(self.serial, "0"*len(self.serial))
-                ioreg = ioreg.replace(self.smuuid, "-".join([ "0"*len(x) for x in self.smuuid.split("-") ]))
-            with open(os.path.join(temp, "ioreg.txt"), "wb") as f:
-                f.write(ioreg.encode("utf-8"))
+        folder = os.path.join(temp, "IORegistry")
+        os.mkdir(folder)
+        for plane in ["IOService","CoreCapture","IO80211Plane","IOACPIPlane","IODeviceTree","IOPower","IOUSB"]:
+            # Pipes the output of ioreg to a ioreg.txt file in the temp folder
+            ioreg = self.r.run({"args" : ["ioreg","-l","-p",plane,"-w0"]})[0]
+            if len(ioreg):
+                if self.h_serial:
+                    ioreg = ioreg.replace(self.serial, "0"*len(self.serial))
+                    ioreg = ioreg.replace(self.smuuid, "-".join([ "0"*len(x) for x in self.smuuid.split("-") ]))
+                with open(os.path.join(folder, plane+".txt"), "wb") as f:
+                    f.write(ioreg.encode("utf-8"))
 
     def process_cache(self, temp):
         print("Rebuilding the kextcache (may take some time)...")
