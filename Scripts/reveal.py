@@ -1,4 +1,6 @@
-import sys, os, run
+import sys, os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.realpath(__file__))))
+import run
 
 class Reveal:
 
@@ -13,6 +15,9 @@ class Reveal:
         # Reveals the passed path in Finder - only works on macOS
         if not sys.platform == "darwin":
             return ("", "macOS Only", 1)
+        if not path:
+            # No path sent - nothing to reveal
+            return ("", "No path specified", 1)
         # Build our script - then convert it to a single line task
         if not os.path.exists(path):
             # Not real - bail
@@ -29,7 +34,6 @@ class Reveal:
                 "-e", "end tell"
             ])
         else:
-            print(self.get_parent(path))
             if path == self.get_parent(path):
                 command.extend([
                     "-e", "set p to \"{}\"".format(path.replace("\"", "\\\"")),
@@ -50,4 +54,17 @@ class Reveal:
                     "-e", "select (POSIX file p as text)",
                     "-e", "end tell"
                 ])
+        return self.r.run({"args" : command})
+
+    def notify(self, title = None, subtitle = None, sound = None):
+        # Sends a notification
+        if not title:
+            return ("", "Malformed dict", 1)
+        # Build our notification
+        n_text = "display notification with title \"{}\"".format(title.replace("\"", "\\\""))
+        if subtitle:
+            n_text += " subtitle \"{}\"".format(subtitle.replace("\"", "\\\""))
+        if sound:
+            n_text += " sound name \"{}\"".format(sound.replace("\"", "\\\""))
+        command = ["osascript", "-e", n_text]
         return self.r.run({"args" : command})
