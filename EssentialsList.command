@@ -542,7 +542,10 @@ class Essentials:
                     # We actually wrote some stuff
                     self.write_text(kext, os.path.join(p_folder, "Kexts.txt"))
             # Check in the drivers32/64(UEFI) folders
-            d_folders = [ x for x in os.listdir(p) if x.lower() in ["drivers32", "drivers64", "drivers32uefi", "drivers64uefi", "drivers/UEFI", "drivers/BIOS", "UEFIDrivers", "BiosDrivers"] and os.path.isdir(os.path.join(p, x)) ]
+            d_folders = [ x for x in os.listdir(p) if x.lower() in ["drivers32", "drivers64", "drivers32uefi", "drivers64uefi", "uefidrivers", "biosdrivers"] and os.path.isdir(os.path.join(p, x)) ]
+            p2 = os.path.join(p,"drivers")
+            if os.path.exists(p2) and os.path.isdir(p2):
+                d_folders.extend([ os.path.join("drivers",x) for x in os.listdir(p2) if x.lower() in ["uefi","bios"] and os.path.isdir(os.path.join(p2,x))])
             if len(d_folders):
                 for d in sorted(d_folders):
                     uefi += "{}\n".format(d)
