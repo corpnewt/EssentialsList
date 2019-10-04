@@ -684,20 +684,13 @@ class Essentials:
             # Touch it up a bit
             new_cache = []
             for line in cache[1].split("\n"):
-                # Check for URL = "somekext.kext/
-                if not ('URL = "' in line and "file://" in line):
+                # Check for "file:///some/path/somekext.kext/
+                if not "file://" in line:
                     continue
-                try:
-                    loc  = line.split("file://")[1].split('"')[0]
-                except:
-                    loc  = ""
-                try:
-                    kext = line.split('URL = "')[1].split("/")[0]
-                except:
-                    kext = ""
-                k = "{}{}".format(loc, kext)
+                try: k = line.split("file://")[1].split('/"')[0]
+                except: continue
                 if len(k) and not k in new_cache:
-                    new_cache.append("{}{}".format(loc, kext))
+                    new_cache.append(k)
             if len(new_cache):
                 self.write_text("\n".join(new_cache), os.path.join(temp, "kextcache.txt"))
 
