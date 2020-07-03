@@ -67,11 +67,9 @@ class Essentials:
     def write_text(self, text, filepath):
         # Helper method to write binary text to file on py3, but
         # leave the str/unicode values alone on py2
-        w = "w"
         if sys.version_info >= (3,0) and isinstance(text, str):
             text = text.encode("utf-8","ignore")
-            w = "wb"
-        with open(filepath, w) as f:
+        with open(filepath, "wb") as f:
             f.write(text)
         
     def get_binary(self, name):
