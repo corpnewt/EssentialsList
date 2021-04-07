@@ -138,7 +138,7 @@ class Essentials:
         self.d.update()
         boot_manager = bdmesg.get_bootloader_uuid()
         mounts = self.d.get_disks_and_partitions_dict()
-        disks = mounts.keys()
+        disks = list(mounts)
         i = 0
         for d in disks:
             i += 1
@@ -161,15 +161,8 @@ class Essentials:
             return self.get_efi()
         if menu.lower() == "q":
             self.u.custom_quit()
-        try:
-            disk_iden = int(menu)
-            if not (disk_iden > 0 and disk_iden <= len(disks)):
-                # out of range!
-                self.u.grab("Invalid disk!", timeout=3)
-                return self.get_efi()
-            disk = disks[disk_iden-1]
-        except:
-            disk = menu
+        try: disk = disks[int(menu)-1]
+        except: disk = menu
         iden = self.d.get_identifier(disk)
         name = self.d.get_volume_name(disk)
         if not iden:
